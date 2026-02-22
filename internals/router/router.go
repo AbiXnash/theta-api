@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/AbiXnash/theta-api/internals/components"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gookit/slog"
 )
@@ -23,6 +24,7 @@ func GetRouter(c *components.Components) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(cors.Default())
 	r.SetTrustedProxies(nil)
 
 	setRoutes(r, c)

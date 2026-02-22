@@ -1,37 +1,24 @@
 package router
 
 import (
-	"net/http"
-
 	"github.com/AbiXnash/theta-api/internals/components"
+	"github.com/AbiXnash/theta-api/internals/router/auth"
 	"github.com/gin-gonic/gin"
 )
 
 func setRoutes(r *gin.Engine, c *components.Components) {
+	healthRoutes(r, c)
+	authRoutes(r, c)
+}
+
+func healthRoutes(r *gin.Engine, c *components.Components) {
 	r.GET("/health", func(ctx *gin.Context) { health(ctx, c) })
-	r.POST("/login", func(ctx *gin.Context) { userLogin(ctx, c) })
 }
 
-func health(c *gin.Context, comps *components.Components) {
-	if comps.Status.IsReady() {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
-			"db":     "connected",
-		})
-		return
+func authRoutes(r *gin.Engine, c *components.Components) {
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/login", func(ctx *gin.Context) { auth.UserLogin(ctx, c) })
+		authGroup.POST("/register", func(ctx *gin.Context) { auth.UserRegister(ctx, c) })
 	}
-	c.JSON(http.StatusServiceUnavailable, gin.H{
-		"status": "unhealthy",
-		"db":     "disconnected",
-	})
-}
-
-func userLogin(c *gin.Context, _ *components.Components) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	c.JSON(http.StatusAccepted, gin.H{
-		"username": username,
-		"password": password,
-	})
 }
