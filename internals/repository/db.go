@@ -8,16 +8,33 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-func ConnectDB() {
+var DB *sql.DB
+
+func ConnectDB() error {
 	url := os.Getenv("TURSO_DATABASE_URL")
 
-	db, err := sql.Open("libsql", url)
+	var err error
+	DB, err = sql.Open("libsql", url)
 	if err != nil {
-		slog.Error("failed to connect to turso")
-		os.Exit(1)
-	} else {
-		slog.Info("Connected to Turso")
+		slog.Error("failed to connect to turso: ", err)
+		return err
 	}
 
-	defer db.Close()
+	if err := DB.Ping(); err != nil {
+		slog.Error("failed to ping turso: ", err)
+		return err
+	}
+
+	slog.Info("Connected to Turso")
+	return nil
+}
+
+func GetDB() *sql.DB {
+	return DB
+}
+
+func CloseDB() {
+	if DB != nil {
+		DB.Close()
+	}
 }

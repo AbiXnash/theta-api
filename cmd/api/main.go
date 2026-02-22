@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/AbiXnash/theta-api/internals/db"
+	"github.com/AbiXnash/theta-api/internals/components"
+	db "github.com/AbiXnash/theta-api/internals/repository"
 	"github.com/AbiXnash/theta-api/internals/router"
+	"github.com/AbiXnash/theta-api/internals/service"
 	"github.com/gookit/slog"
 	"github.com/joho/godotenv"
 )
@@ -12,7 +14,28 @@ import (
 func init() {
 	loadEnv()
 	configureLogger()
-	connectDB()
+
+	if err := db.ConnectDB(); err != nil {
+		slog.Error("Failed to connect to database")
+		os.Exit(1)
+	}
+}
+
+func main() {
+	port := getPort()
+	slog.Info("Setting up router")
+
+	r := router.GetRouter(updateServerStatus())
+	slog.Info("Server starting on port: ", port)
+	r.Run(":" + port)
+}
+
+func updateServerStatus() *components.Components {
+	comps := components.New()
+	comps.DB = db.GetDB()
+	comps.Status = service.NewStatusService()
+
+	return comps
 }
 
 func loadEnv() {
@@ -29,19 +52,6 @@ func configureLogger() {
 		f.EnableColor = true
 	})
 	slog.Info("Logger configured")
-}
-
-func connectDB() {
-	db.ConnectDB()
-}
-
-func main() {
-	port := getPort()
-	slog.Info("Setting up router")
-
-	r := router.GetRouter()
-	slog.Info("Server starting on port: ", port)
-	r.Run(":" + port)
 }
 
 func getPort() string {
