@@ -7,9 +7,9 @@ import (
 )
 
 func setRoutes(r *gin.Engine) {
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+			"server": "running",
 		})
 	})
 }
